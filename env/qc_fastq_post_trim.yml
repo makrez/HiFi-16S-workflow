@@ -1,0 +1,6 @@
+name: qc_fastq_post_trim
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - seqkit=2.13.0

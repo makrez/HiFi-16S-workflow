@@ -1,0 +1,6 @@
+name: collect_qc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - csvtk=0.31.0

@@ -1,0 +1,6 @@
+name: qc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - csvtk=0.28.0
