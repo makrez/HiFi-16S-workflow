@@ -29,6 +29,14 @@ include {
     collect_QC_skip_cutadapt
 } from './modules/qc'
 
+include {
+  dada2_filter_ccs
+  learn_errors
+  dada2_denoise_independent
+  dada2_make_seqtab
+  dada2_remove_chimeras
+} from './modules/dada2'
+
 // ----------------------------------------------------------------------------
 // Help text
 // ----------------------------------------------------------------------------
@@ -139,6 +147,7 @@ workflow pb16S_preprocess {
         }
 
     QC_fastq(sample_ch)
+    def reads_for_dada2
 
     if (params.skip_primer_trim) {
 
@@ -147,7 +156,7 @@ workflow pb16S_preprocess {
             QC_fastq.out.all_seqkit_summary.collect()
         )
 
-        filtered_reads = QC_fastq.out.filtered_fastq
+        reads_for_dada2 = QC_fastq.out.filtered_fastq
 
     } else {
 
@@ -168,8 +177,45 @@ workflow pb16S_preprocess {
             QC_fastq_post_trim.out.all_seqkit_stats.collect()
         )
 
-        filtered_reads = cutadapt.out.cutadapt_fastq
+        reads_for_dada2 = cutadapt.out.cutadapt_fastq
     }
+
+    filter_script = file("${projectDir}/scripts/filter_and_trim.R", checkIfExists: true)
+
+
+    dada2_filter_ccs(
+        reads_for_dada2,
+        filter_script
+    )
+   
+    learn_errors_script = file("${projectDir}/scripts/learn_errors.R", checkIfExists: true)
+
+    learn_errors(
+        dada2_filter_ccs.out.filtered_fastq.map { sampleID, fastq -> fastq }.collect(),
+        learn_errors_script
+    )
+    
+    denoise_script = file("${projectDir}/scripts/denoise_independent.R", checkIfExists: true)
+
+    dada2_denoise_independent(
+        dada2_filter_ccs.out.filtered_fastq,
+        learn_errors.out.error_model,
+        denoise_script
+    )
+ 
+    make_seqtab_script = file("${projectDir}/scripts/make_seqtab.R", checkIfExists: true)
+
+    dada2_make_seqtab(
+        dada2_denoise_independent.out.dada_rds.map { sampleID, rds -> rds }.collect(),
+        make_seqtab_script
+    )
+
+    remove_chimeras_script = file("${projectDir}/scripts/remove_chimeras.R", checkIfExists: true)
+
+    dada2_remove_chimeras(
+        dada2_make_seqtab.out.seqtab_rds,
+        remove_chimeras_script
+    )
 
 }
 
