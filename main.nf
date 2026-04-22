@@ -46,6 +46,13 @@ include {
     dada2_final_stats
 } from './modules/dada2'
 
+include { 
+  taxonomy_nb_assign
+  taxonomy_best
+  merge_taxonomy_with_table
+  add_md5_to_taxonomy_table 
+  } from './modules/taxonomy'
+
 // ----------------------------------------------------------------------------
 // Help text
 // ----------------------------------------------------------------------------
@@ -304,6 +311,50 @@ workflow pb16S_preprocess {
         dada2_filter_asvs.out.seqtab_filtered_rds,
         metadata_ch,
         final_stats_script
+    )
+    
+    def taxonomy_nb_script = file("${projectDir}/scripts/taxonomy_nb_assign.R", checkIfExists: true)
+    
+    def nb_db_defs = ['silva', 'gtdb', 'gg2'].collect { db ->
+        def db_dir = params["${db}_dir"]
+        def db_filename = db_manifest[db].nb.filename
+        tuple(
+            db,
+            file("${db_dir}/nb/${db_filename}", checkIfExists: true)
+        )
+    }
+    
+    nb_db_ch = Channel.fromList(nb_db_defs)
+    
+    asv_for_nb_ch = dada2_filter_asvs.out.asv_fasta.map { fasta ->
+        tuple(fasta)
+    }
+    
+    nb_inputs_ch = asv_for_nb_ch
+        .combine(nb_db_ch)
+        .map { asv_fasta, db_name, db_fasta ->
+            tuple(asv_fasta, db_name, db_fasta, taxonomy_nb_script)
+        }
+    
+    taxonomy_nb_assign(nb_inputs_ch)
+    
+    best_script = file("${projectDir}/scripts/taxonomy_best.R", checkIfExists: true)
+
+    taxonomy_best(
+        taxonomy_nb_assign.out.nb_tax.map { it[1] }.collect(),
+        params.db_to_prioritize,
+        best_script
+    )
+
+    merge_script = file("${projectDir}/scripts/merge_taxonomy_with_table.R", checkIfExists: true)
+
+    merge_taxonomy_with_table(
+        taxonomy_best.out.best_tax,
+        dada2_filter_asvs.out.asv_table_tsv,
+        merge_script
+    )
+    add_md5_to_taxonomy_table(
+      merge_taxonomy_with_table.out.merged_no_id
     )
 }
 
