@@ -1,0 +1,199 @@
+#!/usr/bin/env Rscript
+
+err_quit <- function(msg, status = 1) {
+  message("Error: ", msg)
+  quit(save = "no", status = status)
+}
+
+args <- commandArgs(trailingOnly = TRUE)
+
+if (length(args) < 10) {
+  err_quit(
+    paste(
+      "Expected at least 10 positional arguments:",
+      "1) input_seqtab_nochim_rds",
+      "2) input_seqtab_filtered_rds",
+      "3) metadata_tsv",
+      "4) output_dada2_tracking_tsv",
+      "5) output_sample_frequency_detail_tsv",
+      "6) output_dada2_qc_tsv",
+      "7) output_rarefaction_depth_txt",
+      "8) output_alpha_depth_txt",
+      "9..n) filter_stats files, then literal --DENOISE_STATS--, then denoise_stats files",
+      sep = "\n"
+    )
+  )
+}
+
+marker_idx <- match("--DENOISE_STATS--", args)
+if (is.na(marker_idx)) {
+  err_quit("Missing required separator token: --DENOISE_STATS--")
+}
+
+if (marker_idx <= 9) {
+  err_quit("No filter_stats files provided before --DENOISE_STATS--")
+}
+if (marker_idx == length(args)) {
+  err_quit("No denoise_stats files provided after --DENOISE_STATS--")
+}
+
+input_seqtab_nochim_rds <- args[1]
+input_seqtab_filtered_rds <- args[2]
+metadata_tsv <- args[3]
+output_tracking_tsv <- args[4]
+output_freq_tsv <- args[5]
+output_qc_tsv <- args[6]
+output_rarefaction_txt <- args[7]
+output_alpha_txt <- args[8]
+
+filter_stats_files <- args[9:(marker_idx - 1)]
+denoise_stats_files <- args[(marker_idx + 1):length(args)]
+
+for (f in c(
+  input_seqtab_nochim_rds, input_seqtab_filtered_rds, metadata_tsv,
+  filter_stats_files, denoise_stats_files
+)) {
+  if (!file.exists(f)) {
+    err_quit(sprintf("Required file does not exist: %s", f))
+  }
+}
+
+read_tsv_safe <- function(path) {
+  read.table(
+    path,
+    header = TRUE,
+    sep = "\t",
+    quote = "",
+    comment.char = "",
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
+}
+
+bind_named_tables <- function(files, required_cols) {
+  tabs <- lapply(files, read_tsv_safe)
+  for (i in seq_along(tabs)) {
+    missing_cols <- setdiff(required_cols, colnames(tabs[[i]]))
+    if (length(missing_cols) > 0) {
+      err_quit(sprintf(
+        "File %s is missing required columns: %s",
+        files[i],
+        paste(missing_cols, collapse = ", ")
+      ))
+    }
+  }
+  out <- do.call(rbind, tabs)
+  rownames(out) <- NULL
+  out
+}
+
+filter_stats <- bind_named_tables(
+  filter_stats_files,
+  c("sample", "input_reads", "filtered_reads")
+)
+
+denoise_stats <- bind_named_tables(
+  denoise_stats_files,
+  c("sample", "denoised_reads")
+)
+
+seqtab_nochim <- readRDS(input_seqtab_nochim_rds)
+seqtab_filtered <- readRDS(input_seqtab_filtered_rds)
+
+if (!is.matrix(seqtab_nochim)) {
+  err_quit("seqtab_nochim is not a matrix")
+}
+if (!is.matrix(seqtab_filtered)) {
+  err_quit("seqtab_filtered is not a matrix")
+}
+
+nochim_df <- data.frame(
+  sample = rownames(seqtab_nochim),
+  non_chimeric_reads = as.numeric(rowSums(seqtab_nochim)),
+  stringsAsFactors = FALSE
+)
+
+final_depth_df <- data.frame(
+  sample = rownames(seqtab_filtered),
+  frequency = as.numeric(rowSums(seqtab_filtered)),
+  stringsAsFactors = FALSE
+)
+
+tracking <- merge(filter_stats, denoise_stats, by = "sample", all = TRUE, sort = FALSE)
+tracking <- merge(tracking, nochim_df, by = "sample", all = TRUE, sort = FALSE)
+
+tracking <- tracking[, c("sample", "input_reads", "filtered_reads", "denoised_reads", "non_chimeric_reads")]
+tracking <- tracking[match(unique(c(filter_stats$sample, denoise_stats$sample, nochim_df$sample)), tracking$sample), ]
+tracking <- tracking[!is.na(tracking$sample), ]
+
+write.table(
+  tracking,
+  file = output_tracking_tsv,
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE,
+  col.names = TRUE
+)
+
+write.table(
+  final_depth_df,
+  file = output_freq_tsv,
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE,
+  col.names = TRUE
+)
+
+meta <- read_tsv_safe(metadata_tsv)
+if (!("sample_name" %in% colnames(meta))) {
+  err_quit("Metadata must contain column 'sample_name'")
+}
+
+qc_df <- merge(
+  final_depth_df,
+  meta,
+  by.x = "sample",
+  by.y = "sample_name",
+  all.x = TRUE,
+  sort = FALSE
+)
+
+qc_df <- qc_df[match(final_depth_df$sample, qc_df$sample), ]
+write.table(
+  qc_df,
+  file = output_qc_tsv,
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE,
+  col.names = TRUE
+)
+
+sorted_depths <- sort(final_depth_df$frequency, decreasing = TRUE)
+number <- length(sorted_depths)
+
+if (number == 0) {
+  err_quit("No samples available in final filtered sequence table")
+}
+
+if (number <= 2) {
+  rarefaction_d <- sorted_depths[number]
+  alpha_d <- rarefaction_d
+} else if (number < 5) {
+  result <- as.integer(number * 0.8)
+  if (result < 1) result <- 1L
+  rarefaction_d <- sorted_depths[result]
+  alpha_d <- rarefaction_d
+} else {
+  result <- as.integer(number * 0.8)
+  if (result < 1) result <- 1L
+  rarefaction_d <- sorted_depths[result]
+
+  alpha_res <- as.integer(number * 0.2)
+  if (alpha_res < 1) alpha_res <- 1L
+  alpha_d <- sorted_depths[alpha_res]
+}
+
+writeLines(as.character(as.integer(floor(rarefaction_d))), output_rarefaction_txt)
+writeLines(as.character(as.integer(floor(alpha_d))), output_alpha_txt)
+
+quit(save = "no", status = 0)

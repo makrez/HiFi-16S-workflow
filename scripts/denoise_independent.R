@@ -80,5 +80,24 @@ if (!is.null(homopolymer_gap_penalty)) {
 
 dd <- do.call(dada, dada_args)
 
+getN <- function(x) sum(getUniques(x))
+
+denoised_reads <- getN(dd)
+
+stats_df <- data.frame(
+  sample = sub("\\.dada\\.rds$", "", basename(output_dada_rds)),
+  denoised_reads = denoised_reads,
+  stringsAsFactors = FALSE
+)
+
+write.table(
+  stats_df,
+  file = sub("\\.dada\\.rds$", ".denoise_stats.tsv", output_dada_rds),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE,
+  col.names = TRUE
+)
+
 saveRDS(dd, output_dada_rds)
 quit(save = "no", status = 0)

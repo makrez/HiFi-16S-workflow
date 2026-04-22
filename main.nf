@@ -35,6 +35,9 @@ include {
   dada2_denoise_independent
   dada2_make_seqtab
   dada2_remove_chimeras
+  dada2_filter_asvs
+  dada2_stats
+  dada2_final_stats
 } from './modules/dada2'
 
 // ----------------------------------------------------------------------------
@@ -102,6 +105,18 @@ if (!file(params.metadata).exists()) {
 n_sample = file(params.input).countLines() - 1
 if (n_sample < 1) {
     exit 1, "Input sample sheet appears empty: ${params.input}"
+}
+
+// ----------------------------------------------------------------------------
+// ASV filtering parameters (dynamic)
+// ----------------------------------------------------------------------------
+if (n_sample == 1) {
+    dynamic_min_asv_totalfreq = 0
+    dynamic_min_asv_sample = 0
+    log.info("Only 1 sample detected → disabling ASV filtering")
+} else {
+    dynamic_min_asv_totalfreq = params.min_asv_totalfreq ?: 0
+    dynamic_min_asv_sample = params.min_asv_sample ?: 0
 }
 
 trim_cutadapt = params.skip_primer_trim ? "No" : "Yes"
@@ -215,6 +230,31 @@ workflow pb16S_preprocess {
     dada2_remove_chimeras(
         dada2_make_seqtab.out.seqtab_rds,
         remove_chimeras_script
+    )
+    filter_asvs_script = file("${projectDir}/scripts/filter_asvs.R", checkIfExists: true)
+
+    dada2_filter_asvs(
+        dada2_remove_chimeras.out.seqtab_nochim_rds,
+        filter_asvs_script,
+        dynamic_min_asv_totalfreq,
+        dynamic_min_asv_sample
+    )
+    dada2_stats_script = file("${projectDir}/scripts/dada2_stats.R", checkIfExists: true)
+
+    dada2_stats(
+        dada2_filter_asvs.out.seqtab_filtered_rds,
+        metadata_ch,
+        dada2_stats_script
+    )
+    final_stats_script = file("${projectDir}/scripts/final_stats.R", checkIfExists: true)
+
+    dada2_final_stats(
+        dada2_filter_ccs.out.filter_stats.collect(),
+        dada2_denoise_independent.out.denoise_stats.collect(),
+        dada2_remove_chimeras.out.seqtab_nochim_rds,
+        dada2_filter_asvs.out.seqtab_filtered_rds,
+        metadata_ch,
+        final_stats_script
     )
 
 }
