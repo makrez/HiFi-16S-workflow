@@ -1,0 +1,31 @@
+silva:
+  version: "138.2"
+  nb:
+    filename: "silva_nr99_v138.2_toSpecies_trainset.fa.gz"
+    url: "https://zenodo.org/records/14169026/files/silva_nr99_v138.2_toSpecies_trainset.fa.gz?download=1"
+  vsearch:
+    seq_filename: "sequences.fasta.gz"
+    tax_filename: "taxonomy.tsv"
+    seq_url: "https://www.arb-silva.de/fileadmin/silva_databases/release_138_2/Exports/SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz"
+    tax_url: "https://www.arb-silva.de/fileadmin/silva_databases/release_138_2/Exports/taxonomy/taxmap_slv_ssu_ref_nr_138.2.txt.gz"
+
+gtdb:
+  version: "r220"
+  nb:
+    filename: "GTDB_bac120_arc53_ssu_r220_fullTaxo.fa.gz"
+    url: "https://zenodo.org/records/13984843/files/GTDB_bac120_arc53_ssu_r220_fullTaxo.fa.gz?download=1"
+  vsearch:
+    seq_filename: "sequences.fasta"
+    tax_filename: "taxonomy.tsv"
+    seq_url: "https://data.gtdb.ecogenomic.org/releases/release220/220.0/genomic_files_all/ssu_all_r220.fna.gz"
+
+gg2:
+  version: "2024.09"
+  nb:
+    filename: "gg2_2024_09_toSpecies_trainset.fa.gz"
+    url: "https://zenodo.org/records/14169078/files/gg2_2024_09_toSpecies_trainset.fa.gz?download=1"
+  vsearch:
+    seq_filename: "sequences.fasta.gz"
+    tax_filename: "taxonomy.tsv.gz"
+    seq_url: "https://ftp.microbio.me/greengenes_release/2024.09/2024.09.seqs.fna.gz"
+    tax_url: "https://ftp.microbio.me/greengenes_release/2024.09/2024.09.taxonomy.asv.tsv.gz"

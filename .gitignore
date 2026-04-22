@@ -1,4 +1,6 @@
 results*
-.nexflow/*
+.nextflow/*
 legacy/*
 *.log
+*.log*
+work/*
