@@ -62,7 +62,7 @@ err <- suppressWarnings(
     fls = filts,
     nbases = learn_nbases,
     errorEstimationFunction = errfun,
-    multithread = FALSE,
+    multithread = TRUE,
     randomize = TRUE,
     verbose = TRUE
   )

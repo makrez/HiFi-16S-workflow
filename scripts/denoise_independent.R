@@ -66,8 +66,8 @@ drp <- derepFastq(filtered_fastq)
 dada_args <- list(
   derep = drp,
   err = err,
-  multithread = FALSE,
-  verbose = FALSE,
+  multithread = TRUE,
+  verbose = TRUE,
   OMEGA_C = omega_c
 )
 

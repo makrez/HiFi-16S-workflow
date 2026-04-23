@@ -34,6 +34,7 @@ process dada2_filter_ccs {
 }
 
 process learn_errors {
+    label 'cpu16'
     conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
@@ -59,6 +60,7 @@ process learn_errors {
 }
 
 process dada2_denoise_independent {
+    label 'cpuhigh'
     conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
