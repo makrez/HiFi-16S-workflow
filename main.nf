@@ -108,8 +108,6 @@ def db_manifest = new YamlSlurper().parse(db_manifest_file)
 def requested_dbs = params.download_targets ? params.download_targets.tokenize(',')*.trim() : []
 
 def n_sample = null
-def dynamic_min_asv_totalfreq = null
-def dynamic_min_asv_sample = null
 def trim_cutadapt = null
 def log_text = null
 
@@ -164,14 +162,6 @@ else {
         exit 1, "Input sample sheet appears empty: ${params.input}"
     }
 
-    if (n_sample == 1) {
-        dynamic_min_asv_totalfreq = 0
-        dynamic_min_asv_sample = 0
-        log.info("Only 1 sample detected → disabling ASV filtering")
-    } else {
-        dynamic_min_asv_totalfreq = params.min_asv_totalfreq ?: 0
-        dynamic_min_asv_sample = params.min_asv_sample ?: 0
-    }
 
     trim_cutadapt = params.skip_primer_trim ? "No" : "Yes"
 
@@ -290,8 +280,8 @@ workflow pb16S_preprocess {
     dada2_filter_asvs(
         dada2_remove_chimeras.out.seqtab_nochim_rds,
         filter_asvs_script,
-        dynamic_min_asv_totalfreq,
-        dynamic_min_asv_sample
+        params.min_asv_total_freq,
+        params.min_asv_sample
     )
 
     def dada2_stats_script = file("${projectDir}/scripts/dada2_stats.R", checkIfExists: true)
