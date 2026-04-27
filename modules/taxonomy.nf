@@ -1,10 +1,9 @@
 process taxonomy_nb_assign {
+	label 'highcpu'
     conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
     container "quay.io/qiime2/amplicon@sha256:4038fd785bf4e76ddd6ec7a7f57abe94cdca6c5cd0a93d0924971a74eabd7cf2"
 
     publishDir "${params.outdir}/nb_tax", mode: params.publish_dir_mode
-
-    memory { db_name == 'gtdb' ? 24.GB : 8.GB }
 
 
     input:

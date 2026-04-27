@@ -70,7 +70,7 @@ if (chimera_method == "none") {
     seqtab,
     method = chimera_method,
     minFoldParentOverAbundance = min_parent_fold,
-    multithread = FALSE
+    multithread = TRUE
   )
 }
 

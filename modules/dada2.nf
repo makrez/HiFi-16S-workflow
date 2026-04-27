@@ -1,11 +1,12 @@
 process dada2_filter_ccs {
+    
+	label 'cpu_def'
+
     conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/dada2/filtered_fastq", pattern: '*.filtered.fastq.gz', mode: params.publish_dir_mode
     publishDir "${params.outdir}/dada2/filter_stats", pattern: '*.filter_stats.tsv', mode: params.publish_dir_mode
-
-    cpus 1
 
     input:
     tuple val(sampleID), path(trimmed_fastq)
@@ -34,7 +35,7 @@ process dada2_filter_ccs {
 }
 
 process learn_errors {
-    label 'cpu16'
+    label 'highcpu'
     conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
@@ -60,7 +61,7 @@ process learn_errors {
 }
 
 process dada2_denoise_independent {
-    label 'cpuhigh'
+    label 'highparallel'
     conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
@@ -93,6 +94,7 @@ process dada2_denoise_independent {
 }
 
 process dada2_make_seqtab {
+	label 'cpu16'
     conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
