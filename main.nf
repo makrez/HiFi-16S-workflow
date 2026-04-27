@@ -20,6 +20,13 @@ nextflow.enable.dsl = 2
 
 version = "0.1.0"
 
+include {
+    parseRequestedDbs
+    validateDownloadParams
+    validatePreprocessParams
+    buildRunLog
+} from './modules/validation'
+
 include { 
     download_gtdb_db
     download_silva_db
@@ -103,86 +110,18 @@ if (!db_manifest_file.exists()) {
 def db_manifest = new YamlSlurper().parse(db_manifest_file)
 
 // ----------------------------------------------------------------------------
-// Parameter parsing / defaults
+// Parameter parsing and Validation
 // ----------------------------------------------------------------------------
-def requested_dbs = params.download_targets ? params.download_targets.tokenize(',')*.trim() : []
 
-def n_sample = null
-def trim_cutadapt = null
-def log_text = null
+def requested_dbs = parseRequestedDbs(params.download_targets)
 
-// ----------------------------------------------------------------------------
-// Validation
-// ----------------------------------------------------------------------------
 if (params.download_db) {
-    if (!params.download_targets) {
-        exit 1, "When --download_db true, you must also provide --download_targets"
-    }
-
-    def valid_dbs = ['silva', 'gtdb', 'gg2']
-
-    requested_dbs.each { db ->
-        if (!valid_dbs.contains(db)) {
-            exit 1, "Invalid database '${db}'. Allowed values: ${valid_dbs.join(', ')}"
-        }
-        if (!db_manifest[db]) {
-            exit 1, "Database '${db}' is missing from conf/databases.yml"
-        }
-    }
-
-    if (requested_dbs.contains('silva') && !params.silva_dir) {
-        exit 1, "Missing --silva_dir for SILVA download"
-    }
-    if (requested_dbs.contains('gtdb') && !params.gtdb_dir) {
-        exit 1, "Missing --gtdb_dir for GTDB download"
-    }
-    if (requested_dbs.contains('gg2') && !params.gg2_dir) {
-        exit 1, "Missing --gg2_dir for GG2 download"
-    }
+    validateDownloadParams(params, requested_dbs, db_manifest)
+} else {
+    def n_sample = validatePreprocessParams(params)
+    log.info(buildRunLog(params, version, n_sample))
 }
-else {
-    if (!params.input) {
-        exit 1, "Missing required parameter: --input"
-    }
 
-    if (!params.metadata) {
-        exit 1, "Missing required parameter: --metadata"
-    }
-
-    if (!file(params.input).exists()) {
-        exit 1, "Input sample sheet not found: ${params.input}"
-    }
-
-    if (!file(params.metadata).exists()) {
-        exit 1, "Metadata file not found: ${params.metadata}"
-    }
-
-    n_sample = file(params.input).countLines() - 1
-    if (n_sample < 1) {
-        exit 1, "Input sample sheet appears empty: ${params.input}"
-    }
-
-
-    trim_cutadapt = params.skip_primer_trim ? "No" : "Yes"
-
-    log_text = """
-Parameters for native pb-16S preprocessing
-=========================================
-Number of samples in samples TSV: ${n_sample}
-Metadata file: ${params.metadata}
-Filter input reads above Q: ${params.filterQ}
-Downsample reads per sample (0 = disabled): ${params.downsample}
-Trim primers with cutadapt: ${trim_cutadapt}
-Forward primer: ${params.front_p}
-Reverse primer: ${params.adapter_p}
-Output directory: ${params.outdir}
-Execution profile uses conda: ${params.enable_conda}
-Execution profile uses containers: ${params.enable_container}
-Pipeline version: ${version}
-""".stripIndent()
-
-    log.info(log_text)
-}
 
 // ----------------------------------------------------------------------------
 // Workflows
