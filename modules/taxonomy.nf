@@ -24,7 +24,7 @@ process taxonomy_nb_assign {
 
 process taxonomy_best {
     conda (params.enable_conda ? "$projectDir/env/Rdata_table.yml" : null)
-    container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
+    container "quay.io/biocontainers/r-data.table:1.12.2"
     
     publishDir "${params.outdir}/final", mode: params.publish_dir_mode
 
@@ -47,7 +47,7 @@ process taxonomy_best {
 
 process merge_taxonomy_with_table {
     conda (params.enable_conda ? "$projectDir/env/Rdata_table.yml" : null)
-    container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
+    container "quay.io/biocontainers/r-data.table:1.12.2"
 
     publishDir "${params.outdir}/final", mode: params.publish_dir_mode
 
