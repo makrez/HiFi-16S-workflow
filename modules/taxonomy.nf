@@ -1,7 +1,7 @@
 process taxonomy_nb_assign {
 	label 'highcpu'
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
-    container "quay.io/qiime2/amplicon@sha256:4038fd785bf4e76ddd6ec7a7f57abe94cdca6c5cd0a93d0924971a74eabd7cf2"
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
+    container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/nb_tax", mode: params.publish_dir_mode
 
@@ -23,10 +23,10 @@ process taxonomy_nb_assign {
 }
 
 process taxonomy_best {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
-    container "quay.io/qiime2/amplicon@sha256:4038fd785bf4e76ddd6ec7a7f57abe94cdca6c5cd0a93d0924971a74eabd7cf2"
+    conda (params.enable_conda ? "$projectDir/env/Rdata_table.yml" : null)
+    container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
     
-    publishDir "${params.outdir}/results", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/final", mode: params.publish_dir_mode
 
     input:
     path nb_tax_files
@@ -46,10 +46,10 @@ process taxonomy_best {
 }
 
 process merge_taxonomy_with_table {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
-    container "quay.io/qiime2/amplicon@sha256:4038fd785bf4e76ddd6ec7a7f57abe94cdca6c5cd0a93d0924971a74eabd7cf2"
+    conda (params.enable_conda ? "$projectDir/env/Rdata_table.yml" : null)
+    container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
-    publishDir "${params.outdir}/results", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/final", mode: params.publish_dir_mode
 
     input:
     path taxonomy
@@ -69,10 +69,10 @@ process merge_taxonomy_with_table {
 }
 
 process add_md5_to_taxonomy_table {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/jq.yml" : null)
     container "makrezdocker/alpine-jq:1.0"
 
-    publishDir "${params.outdir}/results", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/final", mode: params.publish_dir_mode
 
     input:
     path merged_tax_table

@@ -29,3 +29,12 @@ gg2:
     tax_filename: "taxonomy.tsv.gz"
     seq_url: "https://ftp.microbio.me/greengenes_release/2024.09/2024.09.seqs.fna.gz"
     tax_url: "https://ftp.microbio.me/greengenes_release/2024.09/2024.09.taxonomy.asv.tsv.gz"
+
+# Example for creating incorporating own DB
+mydb:
+  version: "1.0"
+  nb:
+    filename: "mydb_trainset.fa.gz"
+  vsearch:
+    seq_filename: "mydb_sequences.fasta.gz"
+    tax_filename: "mydb_taxonomy.tsv"

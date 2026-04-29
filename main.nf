@@ -102,7 +102,8 @@ if (params.version) {
     exit 0, version
 }
 
-def db_manifest_file = file("${projectDir}/conf/databases.yml")
+def db_manifest_file = file(params.databases_yaml)
+
 if (!db_manifest_file.exists()) {
     exit 1, "Database manifest not found: ${db_manifest_file}"
 }
@@ -243,28 +244,37 @@ workflow pb16S_preprocess {
     )
     
     def taxonomy_nb_script = file("${projectDir}/scripts/taxonomy_nb_assign.R", checkIfExists: true)
-    
-    def nb_db_defs = ['silva', 'gtdb', 'gg2'].collect { db ->
-        def db_dir = params["${db}_dir"]
+
+    def selected_nb_dbs = params.nb_databases instanceof String
+        ? params.nb_databases.split(',')*.trim().findAll()
+        : params.nb_databases
+
+    def nb_db_defs = selected_nb_dbs.collect { db ->
+
+        if (!db_manifest.containsKey(db)) {
+            error "Database '${db}' is listed in params.nb_databases but not found in ${params.databases_yaml}"
+        }
+
+        if (!db_manifest[db].containsKey('nb')) {
+            error "Database '${db}' has no 'nb' section in ${params.databases_yaml}"
+        }
+
         def db_filename = db_manifest[db].nb.filename
+
         tuple(
             db,
-            file("${db_dir}/nb/${db_filename}", checkIfExists: true)
+            file("${params.db_base_dir}/${db}/nb/${db_filename}", checkIfExists: true)
         )
     }
-    
+
     nb_db_ch = Channel.fromList(nb_db_defs)
-    
-    asv_for_nb_ch = dada2_filter_asvs.out.asv_fasta.map { fasta ->
-        tuple(fasta)
-    }
-    
-    nb_inputs_ch = asv_for_nb_ch
+
+    nb_inputs_ch = dada2_filter_asvs.out.asv_fasta
         .combine(nb_db_ch)
         .map { asv_fasta, db_name, db_fasta ->
             tuple(asv_fasta, db_name, db_fasta, taxonomy_nb_script)
         }
-    
+
     taxonomy_nb_assign(nb_inputs_ch)
     
     best_script = file("${projectDir}/scripts/taxonomy_best.R", checkIfExists: true)
