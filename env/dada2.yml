@@ -1,0 +1,6 @@
+name: dada2-1.38.0
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bioconductor-dada2=1.38.0

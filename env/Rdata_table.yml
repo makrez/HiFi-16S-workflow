@@ -1,0 +1,6 @@
+name: r-datatable
+channels:
+  - conda-forge
+dependencies:
+  - r-base
+  - r-data.table

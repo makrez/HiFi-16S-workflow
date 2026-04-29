@@ -2,7 +2,7 @@ process dada2_filter_ccs {
     
 	label 'cpu_def'
 
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/dada2/filtered_fastq", pattern: '*.filtered.fastq.gz', mode: params.publish_dir_mode
@@ -36,7 +36,7 @@ process dada2_filter_ccs {
 
 process learn_errors {
     label 'highcpu'
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/dada2/error_model", pattern: 'errorfun.rds', mode: params.publish_dir_mode
@@ -62,7 +62,7 @@ process learn_errors {
 
 process dada2_denoise_independent {
     label 'highparallel'
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/dada2/denoised", pattern: '*.dada.rds', mode: params.publish_dir_mode
@@ -95,7 +95,7 @@ process dada2_denoise_independent {
 
 process dada2_make_seqtab {
 	label 'cpu16'
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/dada2/seqtab", pattern: 'seqtab.rds', mode: params.publish_dir_mode
@@ -115,7 +115,7 @@ process dada2_make_seqtab {
 }
 
 process dada2_remove_chimeras {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/dada2/chimera_removal", pattern: 'seqtab_nochim.rds', mode: params.publish_dir_mode
@@ -144,7 +144,7 @@ process dada2_remove_chimeras {
 }
 
 process dada2_filter_asvs {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/dada2/filtered_asvs", pattern: 'seqtab_nochim_filtered.rds', mode: params.publish_dir_mode
@@ -177,7 +177,7 @@ process dada2_filter_asvs {
     """
 }
 process dada2_stats {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
     publishDir "${params.outdir}/dada2/", mode: params.publish_dir_mode
@@ -206,10 +206,10 @@ process dada2_stats {
 }
 
 process dada2_final_stats {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
-    publishDir "${params.outdir}/results", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/final", mode: params.publish_dir_mode
 
     cpus 1
 

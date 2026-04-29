@@ -1,0 +1,6 @@
+name: alpine-utils
+channels:
+  - conda-forge
+dependencies:
+  - bash
+  - jq
