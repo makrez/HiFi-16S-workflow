@@ -1,0 +1,23 @@
+silva:
+  version: "tiny"
+  nb:
+    filename: "tiny_db.fa.gz"
+  vsearch:
+    seq_filename: "sequences.tiny.fasta"
+    tax_filename: "taxonomy.tsv"
+
+gtdb:
+  version: "tiny"
+  nb:
+    filename: "tiny_db.fa.gz"
+  vsearch:
+    seq_filename: "sequences.tiny.fasta"
+    tax_filename: "taxonomy.tsv"
+
+gg2:
+  version: "tiny"
+  nb:
+    filename: "tiny_db.fa.gz"
+  vsearch:
+    seq_filename: "sequences.tiny.fasta"
+    tax_filename: "taxonomy.tiny.tsv"
