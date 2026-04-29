@@ -22,6 +22,35 @@ process taxonomy_nb_assign {
     """
 }
 
+process taxonomy_vsearch_assign {
+    label 'highcpu'
+
+    conda (params.enable_conda ? "$projectDir/env/vsearch.yml" : null)
+    container "quay.io/biocontainers/vsearch:2.8.0--hfc679d8_0"
+
+    publishDir "${params.outdir}/vsearch_tax", mode: params.publish_dir_mode
+
+    input:
+    tuple path(asv_fasta), val(db_name), path(vsearch_fasta), path(vsearch_taxonomy), path(assign_script)
+
+    output:
+    tuple val(db_name), path("${db_name}_vsearch.tsv"), emit: vsearch_tax
+
+    script:
+    """
+    bash ${assign_script} \\
+      ${asv_fasta} \\
+      ${vsearch_fasta} \\
+      ${vsearch_taxonomy} \\
+      ${db_name} \\
+      ${task.cpus} \\
+      ${params.maxreject} \\
+      ${params.maxaccept} \\
+      ${params.vsearch_identity} \\
+      ${db_name}_vsearch.tsv
+    """
+}
+
 process taxonomy_best {
     conda (params.enable_conda ? "$projectDir/env/Rdata_table.yml" : null)
     container "quay.io/biocontainers/r-data.table:1.12.2"

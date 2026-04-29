@@ -4,5 +4,4 @@ legacy/*
 *.log
 *.log*
 work/*
-test*
 databases
