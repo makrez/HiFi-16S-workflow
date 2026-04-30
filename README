@@ -1,0 +1,1 @@
+nextflow run main.nf --input test_data/sample_data.tsv --metadata test_data/metadata.tsv --outdir results_qc_only -profile docker
