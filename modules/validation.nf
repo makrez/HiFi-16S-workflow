@@ -18,14 +18,8 @@ def validateDownloadParams(params, requested_dbs, db_manifest) {
         }
     }
 
-    if (requested_dbs.contains('silva') && !params.silva_dir) {
-        error "Missing --silva_dir for SILVA download"
-    }
-    if (requested_dbs.contains('gtdb') && !params.gtdb_dir) {
-        error "Missing --gtdb_dir for GTDB download"
-    }
-    if (requested_dbs.contains('gg2') && !params.gg2_dir) {
-        error "Missing --gg2_dir for GG2 download"
+    if (!params.db_base_dir) {
+        error "Missing required parameter: --db_base_dir"
     }
 }
 

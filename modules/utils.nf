@@ -1,10 +1,11 @@
 process download_gtdb_db {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/jq.yml" : null)
     container "makrezdocker/alpine-jq:1.0"
 
-    publishDir "${params.gtdb_dir}/nb", pattern: "*.fa.gz", mode: "copy"
-    publishDir "${params.gtdb_dir}/vsearch", pattern: "sequences.fasta", mode: "copy"
-    publishDir "${params.gtdb_dir}/vsearch", pattern: "taxonomy.tsv", mode: "copy"
+    publishDir "${params.db_base_dir}/gtdb/nb", pattern: "*.fa.gz", mode: "copy"
+    publishDir "${params.db_base_dir}/gtdb/vsearch", pattern: "sequences.fasta", mode: "copy"
+    publishDir "${params.db_base_dir}/gtdb/vsearch", pattern: "taxonomy.tsv", mode: "copy"
+
 
     label 'cpu_def'
 
@@ -38,12 +39,12 @@ process download_gtdb_db {
 }
 
 process download_silva_db {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/jq.yml" : null)
     container "makrezdocker/alpine-jq:1.0"
 
-    publishDir "${params.silva_dir}/nb", pattern: "*.fa.gz", mode: "copy"
-    publishDir "${params.silva_dir}/vsearch", pattern: "sequences.fasta", mode: "copy"
-    publishDir "${params.silva_dir}/vsearch", pattern: "taxonomy.tsv", mode: "copy"
+    publishDir "${params.db_base_dir}/silva/nb", pattern: "*.fa.gz", mode: "copy"
+    publishDir "${params.db_base_dir}/silva/vsearch", pattern: "sequences.fasta", mode: "copy"
+    publishDir "${params.db_base_dir}/silva/vsearch", pattern: "taxonomy.tsv", mode: "copy"
 
     label 'cpu_def'
 
@@ -83,12 +84,12 @@ process download_silva_db {
 }
 
 process download_gg2_db {
-    conda (params.enable_conda ? "$projectDir/env/qiime2-amplicon-2024.10-py310-ubuntu-conda.yml" : null)
+    conda (params.enable_conda ? "$projectDir/env/jq.yml" : null)
     container "makrezdocker/alpine-jq:1.0"
 
-    publishDir "${params.gg2_dir}/nb", pattern: "*.fa.gz", mode: "copy"
-    publishDir "${params.gg2_dir}/vsearch", pattern: "sequences.fasta", mode: "copy"
-    publishDir "${params.gg2_dir}/vsearch", pattern: "taxonomy.tsv", mode: "copy"
+    publishDir "${params.db_base_dir}/gg2/nb", pattern: "*.fa.gz", mode: "copy"
+    publishDir "${params.db_base_dir}/gg2/vsearch", pattern: "sequences.fasta", mode: "copy"
+    publishDir "${params.db_base_dir}/gg2/vsearch", pattern: "taxonomy.tsv", mode: "copy"
 
     label 'cpu_def'
 
