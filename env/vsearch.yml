@@ -1,7 +1,7 @@
-name: alpine-utils
+name: vsearch
 channels:
   - conda-forge
+  - bioconda
 dependencies:
-  - bash
-  - jq
+  - vsearch
   - gawk
