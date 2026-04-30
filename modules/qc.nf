@@ -61,31 +61,37 @@ process QC_fastq {
     path("${sampleID}.filterQ${params.filterQ}.fastq.gz"), emit: filtered_fastq_files
 
     script:
-    if (params.downsample > 0)
     """
     seqkit fx2tab -j ${task.cpus} -q --gc -l -H -n -i ${sampleFASTQ} | \\
-        awk -v sample="${sampleID}" 'BEGIN{FS=OFS="\\t"} NR==1{print \$0,"sample"} NR>1{print \$0,sample}' \
+        awk -v sample="${sampleID}" 'BEGIN{FS=OFS="\\t"} NR==1{print \$0,"sample"} NR>1{print \$0,sample}' \\
         > ${sampleID}.seqkit.readstats.tsv
 
     seqkit stats -T -j ${task.cpus} -a ${sampleFASTQ} | \\
-        awk -v sample="${sampleID}" 'BEGIN{FS=OFS="\\t"} NR==1{print \$0,"sample"} NR>1{print \$0,sample}' \
+        awk -v sample="${sampleID}" 'BEGIN{FS=OFS="\\t"} NR==1{print \$0,"sample"} NR>1{print \$0,sample}' \\
         > ${sampleID}.seqkit.summarystats.tsv
 
-    seqkit seq -j ${task.cpus} --min-qual ${params.filterQ} ${sampleFASTQ} | \\
-        seqkit head -n ${params.downsample} --out-file ${sampleID}.filterQ${params.filterQ}.fastq.gz
-    """
+    seqkit seq -j ${task.cpus} --min-qual ${params.filterQ} ${sampleFASTQ} \\
+        --out-file ${sampleID}.filterQ${params.filterQ}.tmp.fastq.gz
+
+    n_reads=\$(seqkit stats -T ${sampleID}.filterQ${params.filterQ}.tmp.fastq.gz | awk 'NR==2{print \$4}')
+
+    if [ ${params.downsample} -gt 0 ] && [ "\$n_reads" -gt ${params.downsample} ]; then
+        seqkit head -n ${params.downsample} \\
+            ${sampleID}.filterQ${params.filterQ}.tmp.fastq.gz \\
+            --out-file ${sampleID}.filterQ${params.filterQ}.fastq.gz
     else
-    """
-    seqkit fx2tab -j ${task.cpus} -q --gc -l -H -n -i ${sampleFASTQ} | \\
-        awk -v sample="${sampleID}" 'BEGIN{FS=OFS="\\t"} NR==1{print \$0,"sample"} NR>1{print \$0,sample}' \
-        > ${sampleID}.seqkit.readstats.tsv
+        mv ${sampleID}.filterQ${params.filterQ}.tmp.fastq.gz \\
+          ${sampleID}.filterQ${params.filterQ}.fastq.gz
+    fi
 
-    seqkit stats -T -j ${task.cpus} -a ${sampleFASTQ} | \\
-        awk -v sample="${sampleID}" 'BEGIN{FS=OFS="\\t"} NR==1{print \$0,"sample"} NR>1{print \$0,sample}' \
-        > ${sampleID}.seqkit.summarystats.tsv
+    final_reads=\$(seqkit stats -T ${sampleID}.filterQ${params.filterQ}.fastq.gz | awk 'NR==2{print \$4}')
 
-    seqkit seq -j ${task.cpus} --min-qual ${params.filterQ} ${sampleFASTQ} \
-        --out-file ${sampleID}.filterQ${params.filterQ}.fastq.gz
+    if [ "\$final_reads" -eq 0 ]; then
+        echo "ERROR: QC/downsampling produced 0 reads for sample ${sampleID}" >&2
+        echo "Reads after quality filter: \$n_reads" >&2
+        echo "Requested downsample: ${params.downsample}" >&2
+        exit 1
+    fi
     """
 }
 
