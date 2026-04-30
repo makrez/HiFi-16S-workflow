@@ -55,6 +55,7 @@ include {
 
 include { 
   taxonomy_nb_assign
+  taxonomy_vsearch_assign
   taxonomy_best
   merge_taxonomy_with_table
   add_md5_to_taxonomy_table 
@@ -242,7 +243,6 @@ workflow pb16S_preprocess {
         metadata_ch,
         final_stats_script
     )
-    
     def taxonomy_nb_script = file("${projectDir}/scripts/taxonomy_nb_assign.R", checkIfExists: true)
 
     def selected_nb_dbs = params.nb_databases instanceof String
@@ -276,6 +276,42 @@ workflow pb16S_preprocess {
         }
 
     taxonomy_nb_assign(nb_inputs_ch)
+    
+    def taxonomy_vsearch_script = file("${projectDir}/scripts/taxonomy_vsearch_assign.sh", checkIfExists: true)
+
+    def selected_vsearch_dbs = params.vsearch_databases instanceof String
+        ? params.vsearch_databases.split(',')*.trim().findAll()
+        : params.vsearch_databases
+
+    def vsearch_db_defs = selected_vsearch_dbs.collect { db ->
+
+        if (!db_manifest.containsKey(db)) {
+            error "Database '${db}' is listed in params.vsearch_databases but not found in ${params.databases_yaml}"
+        }
+
+        if (!db_manifest[db].containsKey('vsearch')) {
+            error "Database '${db}' has no 'vsearch' section in ${params.databases_yaml}"
+        }
+
+        def reads_filename = db_manifest[db].vsearch.seq_filename
+        def tax_filename   = db_manifest[db].vsearch.tax_filename
+
+        tuple(
+            db,
+            file("${params.db_base_dir}/${db}/vsearch/${reads_filename}", checkIfExists: true),
+            file("${params.db_base_dir}/${db}/vsearch/${tax_filename}", checkIfExists: true)
+        )
+    }
+
+    vsearch_db_ch = Channel.fromList(vsearch_db_defs)
+
+    vsearch_inputs_ch = dada2_filter_asvs.out.asv_fasta
+        .combine(vsearch_db_ch)
+        .map { asv_fasta, db_name, vsearch_fasta, vsearch_taxonomy ->
+            tuple(asv_fasta, db_name, vsearch_fasta, vsearch_taxonomy, taxonomy_vsearch_script)
+        }
+
+    taxonomy_vsearch_assign(vsearch_inputs_ch)
     
     best_script = file("${projectDir}/scripts/taxonomy_best.R", checkIfExists: true)
 

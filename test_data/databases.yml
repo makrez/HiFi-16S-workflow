@@ -4,7 +4,7 @@ silva:
     filename: "tiny_db.fa.gz"
   vsearch:
     seq_filename: "sequences.tiny.fasta"
-    tax_filename: "taxonomy.tsv"
+    tax_filename: "taxonomy.tiny.tsv"
 
 gtdb:
   version: "tiny"
@@ -12,7 +12,7 @@ gtdb:
     filename: "tiny_db.fa.gz"
   vsearch:
     seq_filename: "sequences.tiny.fasta"
-    tax_filename: "taxonomy.tsv"
+    tax_filename: "taxonomy.tiny.tsv"
 
 gg2:
   version: "tiny"
