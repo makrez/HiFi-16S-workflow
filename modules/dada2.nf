@@ -10,7 +10,6 @@ process dada2_filter_ccs {
 
     input:
     tuple val(sampleID), path(trimmed_fastq)
-    path filter_script
 
     output:
     tuple val(sampleID), path("${sampleID}.filtered.fastq.gz"), emit: filtered_fastq
@@ -22,7 +21,7 @@ process dada2_filter_ccs {
     def maxEeArg  = params.max_ee  != null ? params.max_ee  : 'NA'
 
     """
-    Rscript --vanilla ${filter_script} \\
+    filter_and_trim.R \\
       ${trimmed_fastq} \\
       ${sampleID}.filtered.fastq.gz \\
       ${sampleID}.filter_stats.tsv \\
@@ -44,7 +43,6 @@ process learn_errors {
 
     input:
     path filtered_fastqs
-    path learn_errors_script
 
     output:
     path "errorfun.rds", emit: error_model
@@ -54,7 +52,7 @@ process learn_errors {
     def learnNbasesArg = params.learn_nbases != null ? params.learn_nbases : '1e6'
 
     """
-    Rscript --vanilla ${learn_errors_script} \\
+    learn_errors.R \\
       ${learnNbasesArg} \\
       ${filtered_fastqs.join(' ')}
     """
@@ -71,7 +69,6 @@ process dada2_denoise_independent {
     input:
     tuple val(sampleID), path(filtered_fastq)
     path error_model
-    path denoise_script
 
     output:
     tuple val(sampleID), path("${sampleID}.dada.rds"), emit: dada_rds
@@ -83,7 +80,7 @@ process dada2_denoise_independent {
     def hpGapArg = params.homopolymer_gap_penalty != null ? params.homopolymer_gap_penalty : 'NA'
 
     """
-    Rscript --vanilla ${denoise_script} \\
+    denoise_independent.R \\
       ${filtered_fastq} \\
       ${error_model} \\
       ${sampleID}.dada.rds \\
@@ -102,14 +99,13 @@ process dada2_make_seqtab {
 
     input:
     path dada_rds_files
-    path make_seqtab_script
 
     output:
     path "seqtab.rds", emit: seqtab_rds
 
     script:
     """
-    Rscript --vanilla ${make_seqtab_script} \\
+    make_seqtab.R \\
       ${dada_rds_files.join(' ')}
     """
 }
@@ -123,7 +119,6 @@ process dada2_remove_chimeras {
 
     input:
     path seqtab_rds
-    path remove_chimeras_script
 
     output:
     path "seqtab_nochim.rds", emit: seqtab_nochim_rds
@@ -134,7 +129,7 @@ process dada2_remove_chimeras {
     def minParentFoldArg = params.min_parent_fold != null ? params.min_parent_fold : '1.0'
 
     """
-    Rscript --vanilla ${remove_chimeras_script} \\
+    remove_chimeras.R \\
       ${seqtab_rds} \\
       seqtab_nochim.rds \\
       chimera_stats.tsv \\
@@ -154,7 +149,6 @@ process dada2_filter_asvs {
 
     input:
     path seqtab_nochim_rds
-    path filter_asvs_script
     val min_asv_totalfreq
     val min_asv_sample
 
@@ -166,7 +160,7 @@ process dada2_filter_asvs {
 
     script:
     """
-    Rscript --vanilla ${filter_asvs_script} \\
+    filter_asvs.R \\
       ${seqtab_nochim_rds} \\
       seqtab_nochim_filtered.rds \\
       dada2_table_filtered.tsv \\
@@ -185,7 +179,6 @@ process dada2_stats {
     input:
     path seqtab_filtered_rds
     path metadata
-    path dada2_stats_script
 
     output:
     path "sample_frequency_detail.tsv", emit: sample_frequency_detail
@@ -195,7 +188,7 @@ process dada2_stats {
 
     script:
     """
-    Rscript --vanilla ${dada2_stats_script} \\
+    dada2_stats.R \\
       ${seqtab_filtered_rds} \\
       ${metadata} \\
       sample_frequency_detail.tsv \\
@@ -219,7 +212,6 @@ process dada2_final_stats {
     path seqtab_nochim_rds
     path seqtab_filtered_rds
     path metadata
-    path final_stats_script
 
     output:
     path "dada2_tracking.tsv", emit: dada2_tracking_tsv
@@ -230,7 +222,7 @@ process dada2_final_stats {
 
     script:
     """
-    Rscript --vanilla ${final_stats_script} \\
+    final_stats.R \\
       ${seqtab_nochim_rds} \\
       ${seqtab_filtered_rds} \\
       ${metadata} \\

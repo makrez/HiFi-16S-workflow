@@ -7,14 +7,14 @@ process taxonomy_nb_assign {
     publishDir "${params.outdir}/nb_tax", mode: params.publish_dir_mode
 
     input:
-    tuple path(asv_fasta), val(db_name), path(db_fasta), path(assign_script)
+    tuple path(asv_fasta), val(db_name), path(db_fasta)
 
     output:
     tuple val(db_name), path("${db_name}_nb.tsv"), emit: nb_tax
 
     script:
     """
-    Rscript --vanilla ${assign_script} \\
+    taxonomy_nb_assign.R \\
       ${asv_fasta} \\
       ${db_fasta} \\
       ${db_name} \\
@@ -38,14 +38,14 @@ process taxonomy_vsearch_assign {
     publishDir "${params.outdir}/vsearch_tax", mode: params.publish_dir_mode
 
     input:
-    tuple path(asv_fasta), val(db_name), path(vsearch_fasta), path(vsearch_taxonomy), path(assign_script)
+    tuple path(asv_fasta), val(db_name), path(vsearch_fasta), path(vsearch_taxonomy)
 
     output:
     tuple val(db_name), path("${db_name}_vsearch.tsv"), emit: vsearch_tax
 
     script:
     """
-    bash ${assign_script} \\
+    taxonomy_vsearch_assign.sh \\
       ${asv_fasta} \\
       ${vsearch_fasta} \\
       ${vsearch_taxonomy} \\
@@ -67,7 +67,6 @@ process taxonomy_best {
     input:
     path nb_tax_files
     val db_priority
-    path best_script
 
     output:
     path "best_taxonomy.tsv", emit: best_tax
@@ -75,7 +74,7 @@ process taxonomy_best {
 
     script:
     """
-    Rscript --vanilla ${best_script} \\
+    taxonomy_best.R \\
       ${nb_tax_files.join(' ')} \\
       ${db_priority}
     """
@@ -90,14 +89,13 @@ process merge_taxonomy_with_table {
     input:
     path taxonomy
     path asv_table
-    path merge_script
 
     output:
     path "best_tax_merged_no_id.tsv", emit: merged_no_id
 
     script:
     """
-    Rscript --vanilla ${merge_script} \\
+    merge_taxonomy_with_table.R \\
       ${taxonomy} \\
       ${asv_table} \\
       best_tax_merged_no_id.tsv

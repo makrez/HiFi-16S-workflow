@@ -180,70 +180,51 @@ workflow pb16S_preprocess {
         reads_for_dada2 = cutadapt.out.cutadapt_fastq
     }
 
-    def filter_script = file("${projectDir}/scripts/filter_and_trim.R", checkIfExists: true)
 
     dada2_filter_ccs(
-        reads_for_dada2,
-        filter_script
+        reads_for_dada2
     )
 
-    def learn_errors_script = file("${projectDir}/scripts/learn_errors.R", checkIfExists: true)
 
     learn_errors(
-        dada2_filter_ccs.out.filtered_fastq.map { sampleID, fastq -> fastq }.collect(),
-        learn_errors_script
+        dada2_filter_ccs.out.filtered_fastq.map { sampleID, fastq -> fastq }.collect()
     )
 
-    def denoise_script = file("${projectDir}/scripts/denoise_independent.R", checkIfExists: true)
 
     dada2_denoise_independent(
         dada2_filter_ccs.out.filtered_fastq,
-        learn_errors.out.error_model,
-        denoise_script
+        learn_errors.out.error_model
     )
 
-    def make_seqtab_script = file("${projectDir}/scripts/make_seqtab.R", checkIfExists: true)
 
     dada2_make_seqtab(
-        dada2_denoise_independent.out.dada_rds.map { sampleID, rds -> rds }.collect(),
-        make_seqtab_script
+        dada2_denoise_independent.out.dada_rds.map { sampleID, rds -> rds }.collect()
     )
-
-    def remove_chimeras_script = file("${projectDir}/scripts/remove_chimeras.R", checkIfExists: true)
 
     dada2_remove_chimeras(
         dada2_make_seqtab.out.seqtab_rds,
-        remove_chimeras_script
     )
-
-    def filter_asvs_script = file("${projectDir}/scripts/filter_asvs.R", checkIfExists: true)
 
     dada2_filter_asvs(
         dada2_remove_chimeras.out.seqtab_nochim_rds,
-        filter_asvs_script,
         params.min_asv_total_freq,
         params.min_asv_sample
     )
 
-    def dada2_stats_script = file("${projectDir}/scripts/dada2_stats.R", checkIfExists: true)
 
     dada2_stats(
         dada2_filter_asvs.out.seqtab_filtered_rds,
-        metadata_ch,
-        dada2_stats_script
+        metadata_ch
     )
 
-    def final_stats_script = file("${projectDir}/scripts/final_stats.R", checkIfExists: true)
 
     dada2_final_stats(
         dada2_filter_ccs.out.filter_stats.collect(),
         dada2_denoise_independent.out.denoise_stats.collect(),
         dada2_remove_chimeras.out.seqtab_nochim_rds,
         dada2_filter_asvs.out.seqtab_filtered_rds,
-        metadata_ch,
-        final_stats_script
+        metadata_ch
     )
-    def taxonomy_nb_script = file("${projectDir}/scripts/taxonomy_nb_assign.R", checkIfExists: true)
 
     def selected_nb_dbs = params.nb_databases instanceof String
         ? params.nb_databases.split(',')*.trim().findAll()
@@ -272,13 +253,11 @@ workflow pb16S_preprocess {
     nb_inputs_ch = dada2_filter_asvs.out.asv_fasta
         .combine(nb_db_ch)
         .map { asv_fasta, db_name, db_fasta ->
-            tuple(asv_fasta, db_name, db_fasta, taxonomy_nb_script)
+            tuple(asv_fasta, db_name, db_fasta)
         }
 
     taxonomy_nb_assign(nb_inputs_ch)
     
-    def taxonomy_vsearch_script = file("${projectDir}/scripts/taxonomy_vsearch_assign.sh", checkIfExists: true)
-
     def selected_vsearch_dbs = params.vsearch_databases instanceof String
         ? params.vsearch_databases.split(',')*.trim().findAll()
         : params.vsearch_databases
@@ -308,25 +287,19 @@ workflow pb16S_preprocess {
     vsearch_inputs_ch = dada2_filter_asvs.out.asv_fasta
         .combine(vsearch_db_ch)
         .map { asv_fasta, db_name, vsearch_fasta, vsearch_taxonomy ->
-            tuple(asv_fasta, db_name, vsearch_fasta, vsearch_taxonomy, taxonomy_vsearch_script)
+            tuple(asv_fasta, db_name, vsearch_fasta, vsearch_taxonomy)
         }
 
     taxonomy_vsearch_assign(vsearch_inputs_ch)
     
-    best_script = file("${projectDir}/scripts/taxonomy_best.R", checkIfExists: true)
-
     taxonomy_best(
         taxonomy_nb_assign.out.nb_tax.map { it[1] }.collect(),
-        params.db_to_prioritize,
-        best_script
+        params.db_to_prioritize
     )
-
-    merge_script = file("${projectDir}/scripts/merge_taxonomy_with_table.R", checkIfExists: true)
 
     merge_taxonomy_with_table(
         taxonomy_best.out.best_tax,
-        dada2_filter_asvs.out.asv_table_tsv,
-        merge_script
+        dada2_filter_asvs.out.asv_table_tsv
     )
     add_md5_to_taxonomy_table(
       merge_taxonomy_with_table.out.merged_no_id
