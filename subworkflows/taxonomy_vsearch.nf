@@ -9,7 +9,6 @@ include {
     taxonomy_add_md5 as taxonomy_vsearch_add_md5
 } from '../modules/taxonomy_common'
 
-
 workflow TAXONOMY_VSEARCH {
 
     take:
