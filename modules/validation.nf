@@ -7,12 +7,21 @@ def validateDownloadParams(params, requested_dbs, db_manifest) {
         error "When --download_db true, you must also provide --download_targets"
     }
 
-    def valid_dbs = ['silva', 'gtdb', 'gg2','eukaryome_its', 'eukaryome_18s', 'eukaryome_28s']
+    def valid_dbs = [
+        'silva',
+        'gtdb',
+        'gg2',
+        'euk_ssu',
+        'euk_lsu',
+        'euk_long',
+        'euk_its'
+    ]
 
     requested_dbs.each { db ->
         if (!valid_dbs.contains(db)) {
             error "Invalid database '${db}'. Allowed values: ${valid_dbs.join(', ')}"
         }
+
         if (!db_manifest[db]) {
             error "Database '${db}' is missing from conf/databases.yml"
         }
@@ -56,8 +65,8 @@ Metadata file: ${params.metadata}
 Filter input reads above Q: ${params.filterQ}
 Downsample reads per sample (0 = disabled): ${params.downsample}
 Trim primers with cutadapt: ${trim_cutadapt}
-Forward primer: ${params.front_p}
-Reverse primer: ${params.adapter_p}
+Forward primer: ${params.forward_p}
+Reverse primer: ${params.reverse_p}
 Output directory: ${params.outdir}
 Execution profile uses conda: ${params.enable_conda}
 Execution profile uses containers: ${params.enable_container}
