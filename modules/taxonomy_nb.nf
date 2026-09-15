@@ -4,7 +4,7 @@ process taxonomy_nb_assign {
     conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
-    publishDir "${params.outdir}/nb_tax", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/taxonomy/nb_tax", mode: params.publish_dir_mode
 
     input:
     tuple path(asv_fasta), val(db_name), path(db_fasta)
@@ -34,7 +34,7 @@ process taxonomy_nb_best {
     conda (params.enable_conda ? "$projectDir/env/Rdata_table.yml" : null)
     container "quay.io/biocontainers/r-data.table:1.12.2"
 
-    publishDir "${params.outdir}/nb_tax", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/taxonomy/nb_tax", mode: params.publish_dir_mode
 
     input:
     path nb_tax_files

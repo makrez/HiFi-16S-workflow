@@ -6,8 +6,10 @@ include {
     taxonomy_nb_merge
 } from '../modules/taxonomy_nb'
 
-include { taxonomy_add_md5 as taxonomy_nb_add_md5 } \
-    from '../modules/taxonomy_common'
+include {
+    taxonomy_add_md5 as taxonomy_nb_add_md5
+    taxonomy_summary as taxonomy_nb_summary
+} from '../modules/taxonomy_common'
 
 
 workflow TAXONOMY_NB {
@@ -27,6 +29,7 @@ workflow TAXONOMY_NB {
             .collect(),
         db_priority
     )
+
     taxonomy_nb_merge(
         taxonomy_nb_best.out.best_nb_tax,
         asv_table_tsv
@@ -37,9 +40,16 @@ workflow TAXONOMY_NB {
         'best_nb'
     )
 
+    taxonomy_nb_summary(
+        taxonomy_nb_add_md5.out.tax_with_md5,
+        'best_nb'
+    )
+
     emit:
-    nb_tax              = taxonomy_nb_assign.out.nb_tax
-    best_nb_tax         = taxonomy_nb_best.out.best_nb_tax
-    best_nb_tax_with_db = taxonomy_nb_best.out.best_nb_tax_with_db
-    final_nb_table      = taxonomy_nb_add_md5.out.tax_with_md5
+    nb_tax                  = taxonomy_nb_assign.out.nb_tax
+    best_nb_tax             = taxonomy_nb_best.out.best_nb_tax
+    best_nb_tax_with_db     = taxonomy_nb_best.out.best_nb_tax_with_db
+    final_nb_table          = taxonomy_nb_add_md5.out.tax_with_md5
+    assignment_summary      = taxonomy_nb_summary.out.assignment_summary
+    deepest_rank_summary    = taxonomy_nb_summary.out.deepest_rank_summary
 }
