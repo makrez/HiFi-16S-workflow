@@ -29,3 +29,31 @@ process taxonomy_add_md5 {
     }' ${tax_table} > ${method}_tax_merged_freq_tax.tsv
     """
 }
+
+process taxonomy_summary {
+
+    tag "${prefix}"
+
+    publishDir "${params.outdir}/final",
+    mode: 'copy',
+    overwrite: true
+
+    input:
+    path taxonomy_table
+    val prefix
+
+    output:
+    path "${prefix}_taxonomy_assignment_summary.tsv",
+        emit: assignment_summary
+
+    path "${prefix}_taxonomy_deepest_rank_summary.tsv",
+        emit: deepest_rank_summary
+
+    script:
+    """
+    summarize_taxonomy.R \
+        "${taxonomy_table}" \
+        "${prefix}_taxonomy_assignment_summary.tsv" \
+        "${prefix}_taxonomy_deepest_rank_summary.tsv"
+    """
+}

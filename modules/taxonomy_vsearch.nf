@@ -4,7 +4,7 @@ process taxonomy_vsearch_assign {
     conda (params.enable_conda ? "$projectDir/env/vsearch.yml" : null)
     container "quay.io/biocontainers/vsearch:2.30.0--hd6d6fdc_0"
 
-    publishDir "${params.outdir}/vsearch_tax",
+    publishDir "${params.outdir}/taxonomy/vsearch_tax",
         mode: params.publish_dir_mode
 
     tag "${db_name}"

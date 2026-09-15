@@ -7,6 +7,7 @@ include {
 
 include {
     taxonomy_add_md5 as taxonomy_vsearch_add_md5
+    taxonomy_summary as taxonomy_vsearch_summary
 } from '../modules/taxonomy_common'
 
 workflow TAXONOMY_VSEARCH {
@@ -36,8 +37,15 @@ workflow TAXONOMY_VSEARCH {
         'vsearch'
     )
 
+    taxonomy_vsearch_summary(
+        taxonomy_vsearch_add_md5.out.tax_with_md5,
+        'vsearch'
+    )
+
     emit:
-    vsearch_tax         = taxonomy_vsearch_assign.out.vsearch_tax
-    vsearch_hits        = taxonomy_vsearch_assign.out.vsearch_hits
-    final_vsearch_table = taxonomy_vsearch_add_md5.out.tax_with_md5
+    vsearch_tax             = taxonomy_vsearch_assign.out.vsearch_tax
+    vsearch_hits            = taxonomy_vsearch_assign.out.vsearch_hits
+    final_vsearch_table     = taxonomy_vsearch_add_md5.out.tax_with_md5
+    assignment_summary      = taxonomy_vsearch_summary.out.assignment_summary
+    deepest_rank_summary    = taxonomy_vsearch_summary.out.deepest_rank_summary
 }

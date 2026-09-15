@@ -234,6 +234,67 @@ tax[
 ]
 
 # ------------------------------------------------------------------------------
+# Normalize taxonomy to the canonical pipeline format
+#
+# Native VSEARCH format:
+#
+#   d:Cryptista,p:Cryptophyta,c:Cryptophyceae,...
+#
+# Canonical pipeline format:
+#
+#   d:Cryptista;p:Cryptophyta;c:Cryptophyceae;...
+# ------------------------------------------------------------------------------
+
+canonicalize_vsearch_taxonomy <- function(taxon) {
+
+  if (is.na(taxon) || trimws(taxon) == "") {
+    return(NA_character_)
+  }
+
+  taxon <- trimws(taxon)
+  taxon <- sub(";+$", "", taxon)
+
+  parts <- strsplit(
+    taxon,
+    ",",
+    fixed = TRUE
+  )[[1]]
+
+  parts <- trimws(parts)
+  parts <- parts[parts != ""]
+
+  if (length(parts) == 0) {
+    return(NA_character_)
+  }
+
+  valid <- grepl(
+    "^[dpcofgs]:",
+    parts
+  )
+
+  if (!all(valid)) {
+    stop(sprintf(
+      "Unexpected VSEARCH taxonomy format: %s",
+      taxon
+    ))
+  }
+
+  paste(
+    parts,
+    collapse = ";"
+  )
+}
+
+tax[
+  ,
+  Taxon := vapply(
+    Taxon,
+    canonicalize_vsearch_taxonomy,
+    character(1)
+  )
+]
+
+# ------------------------------------------------------------------------------
 # Read ASV abundance table
 #
 # Expected format:

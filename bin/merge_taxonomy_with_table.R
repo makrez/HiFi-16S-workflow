@@ -50,6 +50,80 @@ if (length(missing_tax_cols) > 0) {
 tax <- tax[, .(Sequence, Taxon, Confidence)]
 
 # ------------------------------------------------------------------------------
+# Normalize taxonomy to the canonical pipeline format
+#
+# Native NB taxonomy is positional:
+#
+#   Cryptista;Cryptophyta;Cryptophyceae;...;pyrenoidifera
+#
+# Canonical pipeline format:
+#
+#   d:Cryptista;p:Cryptophyta;c:Cryptophyceae;...;s:pyrenoidifera
+# ------------------------------------------------------------------------------
+
+rank_codes <- c("d", "p", "c", "o", "f", "g", "s")
+
+canonicalize_nb_taxonomy <- function(taxon) {
+
+  if (is.na(taxon) || trimws(taxon) == "") {
+    return(NA_character_)
+  }
+
+  values <- strsplit(
+    taxon,
+    ";",
+    fixed = TRUE
+  )[[1]]
+
+  values <- trimws(values)
+
+  if (length(values) > length(rank_codes)) {
+    stop(sprintf(
+      "NB taxonomy contains %d ranks; expected at most %d: %s",
+      length(values),
+      length(rank_codes),
+      taxon
+    ))
+  }
+
+  # Assign rank by POSITION before removing empty entries.
+  # This is important because an empty intermediate rank must not
+  # cause all subsequent ranks to shift.
+  ranked <- paste0(
+    rank_codes[seq_along(values)],
+    ":",
+    values
+  )
+
+  keep <- (
+    !is.na(values) &
+      values != "" &
+      values != "NA" &
+      values != "Unassigned"
+  )
+
+  ranked <- ranked[keep]
+
+  if (length(ranked) == 0) {
+    return(NA_character_)
+  }
+
+  paste(
+    ranked,
+    collapse = ";"
+  )
+}
+
+tax[
+  ,
+  Taxon := vapply(
+    Taxon,
+    canonicalize_nb_taxonomy,
+    character(1)
+  )
+]
+
+# ------------------------------------------------------------------------------
 # Read ASV abundance table
 # Expected format:
 #   first column = sample name

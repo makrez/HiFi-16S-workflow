@@ -48,7 +48,7 @@ process QC_raw_stats {
     container "quay.io/biocontainers/seqkit:2.13.0--he881be0_0"
     label 'cpu8'
 
-    publishDir "${params.outdir}/qc_raw",
+    publishDir "${params.outdir}/preprocessing/qc_raw",
         pattern: '*.tsv',
         mode: params.publish_dir_mode
 
@@ -102,7 +102,7 @@ process downsample_fastq {
     container "quay.io/biocontainers/seqkit:2.13.0--he881be0_0"
     label 'cpu8'
 
-    publishDir "${params.outdir}/filtered_input_FASTQ",
+    publishDir "${params.outdir}/preprocessing/filtered_input_FASTQ",
         pattern: '*.fastq.gz',
         mode: params.publish_dir_mode
 
@@ -133,7 +133,7 @@ process cutadapt {
     container "quay.io/biocontainers/cutadapt:5.2--py313h8c92656_1"
     label 'cpu16'
 
-    publishDir "${params.outdir}/cutadapt",
+    publishDir "${params.outdir}/preprocessing/cutadapt",
         pattern: '*.log',
         mode: params.publish_dir_mode
 
@@ -228,7 +228,7 @@ process QC_fastq_post_trim {
     container "quay.io/biocontainers/seqkit:2.13.0--he881be0_0"
     label 'cpu8'
 
-    publishDir "${params.outdir}/qc_post_trim",
+    publishDir "${params.outdir}/preprocessing/qc_post_trim",
         pattern: '*.tsv',
         mode: params.publish_dir_mode
 
@@ -260,7 +260,7 @@ process collect_QC {
     container "quay.io/biocontainers/csvtk:0.31.0--h9ee0642_0"
     label 'cpu8'
 
-    publishDir "${params.outdir}/reads_QC",
+    publishDir "${params.outdir}/preprocessing/reads_QC",
         mode: params.publish_dir_mode
 
     input:
@@ -309,7 +309,7 @@ process collect_QC_skip_cutadapt {
     container "quay.io/biocontainers/csvtk:0.31.0--h9ee0642_0"
     label 'cpu8'
 
-    publishDir "${params.outdir}/reads_QC", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/preprocessing/reads_QC", mode: params.publish_dir_mode
 
     input:
     path raw_readstats
