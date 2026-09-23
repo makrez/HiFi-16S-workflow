@@ -184,6 +184,13 @@ vsearch_lca_maxaccepts = 0
 vsearch_lca_maxrejects = 0
 vsearch_lca_cutoff     = 0.90
 
+// DADA2 naïve Bayes taxonomy assignment
+dada2_nb_min_boot = 50
+dada2_nb_try_rc = false 
+dada2_nb_output_bootstraps = true
+dada2_nb_tax_levels = null
+
+
 // Output
 outdir = "results"
 publish_dir_mode = "copy"
@@ -228,11 +235,13 @@ publish_dir_mode = "copy"
 
 `--min_asv_sample`: Minimum number of samples in which an ASV must be observed to be retained. Setting this to `0` disables filtering based on the number of samples containing the ASV. The default value is `0`.
 
+`--min_asv_prevalence`: Minimum fraction of samples in which an ASV must be observed to be retained. Values range from `0` to `1`. For example, a value of `0.1` requires an ASV to occur in at least 10% of samples. Setting this to `0` disables prevalence-based filtering. The default value is `0`.
+
 `--db_base_dir`: Base directory where the reference databases are stored. This should point to the directory containing the databases defined in `--databases_yaml`.
 
 `--databases_yaml`: YAML configuration file describing the available reference databases and their associated files. By default, the workflow uses `conf/databases.yml` included with the pipeline.
 
-`--db_to_prioritize`: Reference database to prioritize when resolving ties between taxonomic assignments produced by the Naive Bayes classifier. If multiple databases result in equally supported assignments, the assignment from the specified database is selected. The default value is `GG2`.
+`--db_to_prioritize`: Reference database to prioritize when resolving equivalent taxonomic assignments produced from multiple reference databases. The default value is `GG2`.
 
 `--download_db`: If set to `true`, reference databases are downloaded instead of using databases already present under `--db_base_dir`. The databases to download can be selected using `--download_targets`. The default value is `false`.
 
@@ -247,6 +256,18 @@ publish_dir_mode = "copy"
 `--vsearch_lca_maxrejects`: Maximum number of non-matching candidate reference sequences considered before VSEARCH stops searching for a query. Setting this to `0` disables this limit. Together with `--vsearch_lca_maxaccepts 0`, the complete reference database is searched.
 
 `--vsearch_lca_cutoff`: Fraction of matching reference sequences required to support a taxonomic assignment when determining the lowest common ancestor (LCA). The default value of `0.90` requires 90% of the accepted matches to support the reported taxonomic lineage.
+
+`--dada2_nb_min_boot`: Minimum bootstrap confidence required for DADA2 naïve Bayes taxonomic assignment. Taxonomic ranks with bootstrap support below this threshold are not assigned. The default value is `50`.
+
+`--dada2_nb_try_rc`: If set to `true`, DADA2 also attempts taxonomic assignment using the reverse complement of each ASV sequence. This is normally unnecessary when reads have already been oriented during primer trimming. The default value is `false`.
+
+`--dada2_nb_output_bootstraps`: If set to `true`, bootstrap confidence values produced by the DADA2 naïve Bayes classifier are retained in the taxonomy output. The default value is `true`.
+
+`--dada2_nb_tax_levels`: Optional taxonomic rank names supplied to the DADA2 classifier. When set to `null`, taxonomic levels are determined from the reference database rather than being explicitly specified by the workflow. The default value is `null`.
+
+`--outdir`: Directory in which workflow results are written. The default value is `results`.
+
+`--publish_dir_mode`: Nextflow publish mode used when placing result files in `--outdir`. The default value is `copy`.
 
 
 ## Output files
