@@ -184,7 +184,7 @@ if (!any(keep_asvs)) {
 seqtab_filt_all_samples <- seqtab[, keep_asvs, drop = FALSE]
 
 # ------------------------------------------------------------------------------
-# Calculate per-sample filtering statistics
+# Calculate filtering statistics
 # ------------------------------------------------------------------------------
 
 reads_before <- rowSums(seqtab)
@@ -193,7 +193,8 @@ reads_after <- rowSums(seqtab_filt_all_samples)
 asvs_before <- rowSums(seqtab > 0)
 asvs_after <- rowSums(seqtab_filt_all_samples > 0)
 
-stats_df <- data.frame(
+# Per-sample statistics
+sample_stats_df <- data.frame(
   sample = rownames(seqtab),
   reads_before_asv_filtering = reads_before,
   reads_after_asv_filtering = reads_after,
@@ -201,6 +202,22 @@ stats_df <- data.frame(
   number_of_asvs_after_filtering = asvs_after,
   condition = "sample",
   stringsAsFactors = FALSE
+)
+
+# Overall dataset statistics
+overall_stats_df <- data.frame(
+  sample = "all_samples",
+  reads_before_asv_filtering = sum(seqtab),
+  reads_after_asv_filtering = sum(seqtab_filt_all_samples),
+  number_of_asvs_before_filtering = ncol(seqtab),
+  number_of_asvs_after_filtering = ncol(seqtab_filt_all_samples),
+  condition = "overall",
+  stringsAsFactors = FALSE
+)
+
+stats_df <- rbind(
+  sample_stats_df,
+  overall_stats_df
 )
 
 # ------------------------------------------------------------------------------
