@@ -60,7 +60,8 @@ workflow DADA2_WORKFLOW {
     dada2_filter_asvs(
         dada2_remove_chimeras.out.seqtab_nochim_rds,
         params.min_asv_total_freq,
-        params.min_asv_sample
+        params.min_asv_sample,
+        params.min_asv_prevalence
     )
 
     dada2_stats(

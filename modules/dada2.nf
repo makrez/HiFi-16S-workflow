@@ -177,6 +177,7 @@ process dada2_remove_chimeras {
     """
 }
 
+
 process dada2_filter_asvs {
     conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
@@ -190,6 +191,7 @@ process dada2_filter_asvs {
     path seqtab_nochim_rds
     val min_asv_totalfreq
     val min_asv_sample
+    val min_asv_prevalence
 
     output:
     path "seqtab_nochim_filtered.rds", emit: seqtab_filtered_rds
@@ -206,7 +208,8 @@ process dada2_filter_asvs {
       dada2_ASV.fasta \\
       filter_asv_stats.tsv \\
       ${min_asv_totalfreq} \\
-      ${min_asv_sample}
+      ${min_asv_sample} \\
+      ${min_asv_prevalence}
     """
 }
 
