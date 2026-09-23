@@ -1,24 +1,33 @@
 process taxonomy_nb_assign {
-    label 'highcpu'
+    label 'extremehighcpu'
 
     conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
 
-    publishDir "${params.outdir}/taxonomy/nb_tax", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/taxonomy/nb_tax",
+        mode: params.publish_dir_mode
 
     input:
     tuple path(asv_fasta), val(db_name), path(db_fasta)
 
     output:
     tuple val(db_name), path("${db_name}_nb.tsv"), emit: nb_tax
+    path "${db_name}_nb_bootstraps.tsv", optional: true, emit: nb_bootstraps
 
     script:
+    def taxLevelsArg = params.dada2_nb_tax_levels == null ?
+        'NULL' : params.dada2_nb_tax_levels.join(',')
+
     """
     taxonomy_nb_assign.R \\
       ${asv_fasta} \\
       ${db_fasta} \\
       ${db_name} \\
-      ${task.cpus}
+      ${task.cpus} \\
+      ${params.dada2_nb_min_boot} \\
+      ${params.dada2_nb_try_rc} \\
+      ${params.dada2_nb_output_bootstraps} \\
+      "${taxLevelsArg}"
 
     harmonise_taxonomy.R \\
       ${db_name}_nb.tsv \\
@@ -28,7 +37,6 @@ process taxonomy_nb_assign {
     mv ${db_name}_nb.harmonised.tmp.tsv ${db_name}_nb.tsv
     """
 }
-
 
 process taxonomy_nb_best {
     conda (params.enable_conda ? "$projectDir/env/Rdata_table.yml" : null)

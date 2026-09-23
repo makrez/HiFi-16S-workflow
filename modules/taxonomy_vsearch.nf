@@ -1,5 +1,5 @@
 process taxonomy_vsearch_assign {
-    label 'highcpu'
+    label 'extremehighcpu'
 
     conda (params.enable_conda ? "$projectDir/env/vsearch.yml" : null)
     container "quay.io/biocontainers/vsearch:2.30.0--hd6d6fdc_0"

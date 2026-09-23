@@ -17,7 +17,7 @@ vsearch \
   --usearch_global "${ASV_FASTA}" \
   --db "${DB_FASTA}" \
   --id "${IDENTITY}" \
-  --strand both \
+  --strand plus \
   --threads "${THREADS}" \
   --maxaccepts "${MAXACCEPT}" \
   --maxrejects "${MAXREJECT}" \
