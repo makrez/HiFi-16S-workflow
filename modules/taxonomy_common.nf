@@ -34,6 +34,7 @@ process taxonomy_summary {
 
     conda (params.enable_conda ? "$projectDir/env/Rdata_table.yml" : null)
     container "quay.io/biocontainers/r-data.table:1.12.2"
+
     tag "${prefix}"
 
     publishDir "${params.outdir}/final",
