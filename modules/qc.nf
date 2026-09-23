@@ -128,6 +128,7 @@ process downsample_fastq {
     """
 }
 
+
 process cutadapt {
     conda (params.enable_conda ? "$projectDir/env/cutadapt.yml" : null)
     container "quay.io/biocontainers/cutadapt:5.2--py313h8c92656_1"
@@ -148,16 +149,9 @@ process cutadapt {
 
     script:
     /*
-     * Both parameters may be provided either as:
+     * Accept either a single primer or a list of primers.
      *
-     *   forward_p = 'PRIMER'
-     *
-     * or:
-     *
-     *   forward_p = [
-     *       'PRIMER_1',
-     *       'PRIMER_2'
-     *   ]
+     * All forward/reverse combinations are considered valid.
      */
     def forwardPrimers = forward_p instanceof Collection
         ? forward_p
@@ -175,12 +169,19 @@ process cutadapt {
         error "No valid reverse primer was provided for sample ${sampleID}"
     }
 
-    def forwardArgs = forwardPrimers
-        .collect { primer -> "-g '${primer}'" }
-        .join(" \\\n        ")
-
-    def reverseArgs = reversePrimers
-        .collect { primer -> "-a '${primer}'" }
+    /*
+     * Generate linked adapters.
+     *
+     * -g requires both primer components.
+     * --revcomp searches both orientations.
+     * --trimmed-only discards reads without a complete match.
+     */
+    def adapterArgs = forwardPrimers
+        .collectMany { forward ->
+            reversePrimers.collect { reverse ->
+                "-g '${forward}...${reverse}'"
+            }
+        }
         .join(" \\\n        ")
 
     """
@@ -188,14 +189,15 @@ process cutadapt {
 
     cutadapt \\
         -j ${task.cpus} \\
-        ${forwardArgs} \\
-        ${reverseArgs} \\
+        ${adapterArgs} \\
+        --trimmed-only \\
+        --revcomp \\
+        -e 0.1 \\
         -o "${sampleID}.trimmed.fastq.gz" \\
         "${filteredFASTQ}" \\
         > "${sampleID}.cutadapt.log"
     """
 }
-
 
 process summarize_cutadapt {
     conda (params.enable_conda ? "$projectDir/env/jq.yml" : null)
