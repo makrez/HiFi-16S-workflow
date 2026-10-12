@@ -4,6 +4,14 @@ suppressPackageStartupMessages({
   library(data.table)
 })
 
+# Shared canonical taxonomy normalisation (d__, p__, ...).
+get_script_dir <- function() {
+  arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
+  if (!length(arg)) stop("Cannot determine script location")
+  dirname(normalizePath(sub("^--file=", "", arg[[1]])))
+}
+source(file.path(get_script_dir(), "lib", "taxonomy_harmonisation.R"))
+
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) != 4) {
@@ -233,66 +241,28 @@ tax[
   Confidence := round(Confidence)
 ]
 
-# ------------------------------------------------------------------------------
-# Normalize taxonomy to the canonical pipeline format
-#
-# Native VSEARCH format:
-#
-#   d:Cryptista,p:Cryptophyta,c:Cryptophyceae,...
-#
-# Canonical pipeline format:
-#
-#   d:Cryptista;p:Cryptophyta;c:Cryptophyceae;...
-# ------------------------------------------------------------------------------
-
+# Convert native SINTAX rank labels to the canonical padded d__ format.
+# This happens AFTER calculating hit support using the native VSEARCH labels.
+# Do not add a genus to native VSEARCH species epithets.
 canonicalize_vsearch_taxonomy <- function(taxon) {
-
-  if (is.na(taxon) || trimws(taxon) == "") {
+  if (is.na(taxon) || !nzchar(trimws(taxon))) {
     return(NA_character_)
   }
 
-  taxon <- trimws(taxon)
-  taxon <- sub(";+$", "", taxon)
-
-  parts <- strsplit(
-    taxon,
-    ",",
-    fixed = TRUE
-  )[[1]]
-
-  parts <- trimws(parts)
-  parts <- parts[parts != ""]
-
-  if (length(parts) == 0) {
-    return(NA_character_)
+  parts <- trimws(strsplit(sub(";+$", "", trimws(taxon)), ",", fixed = TRUE)[[1]])
+  parts <- parts[nzchar(parts)]
+  if (!length(parts)) return(NA_character_)
+  if (!all(grepl("^[dpcofgs]:", parts))) {
+    stop("Unexpected VSEARCH taxonomy format: ", taxon)
   }
 
-  valid <- grepl(
-    "^[dpcofgs]:",
-    parts
-  )
-
-  if (!all(valid)) {
-    stop(sprintf(
-      "Unexpected VSEARCH taxonomy format: %s",
-      taxon
-    ))
-  }
-
-  paste(
-    parts,
-    collapse = ";"
-  )
+  codes <- sub(":.*$", "", parts)
+  values <- sub("^[dpcofgs]:", "", parts)
+  normalise_taxonomy(paste0(codes, "__", values, collapse = ";"))
 }
 
-tax[
-  ,
-  Taxon := vapply(
-    Taxon,
-    canonicalize_vsearch_taxonomy,
-    character(1)
-  )
-]
+tax[, Taxon := vapply(Taxon, canonicalize_vsearch_taxonomy,
+                      character(1), USE.NAMES = FALSE)]
 
 # ------------------------------------------------------------------------------
 # Read ASV abundance table
