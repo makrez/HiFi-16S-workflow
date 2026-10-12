@@ -141,8 +141,8 @@ filterQ = 20
 downsample = 0
 skip_primer_trim = false
 max_ee = 2
-min_len = 500
-max_len = 6000
+min_len = 1000
+max_len = 1600
 
 // Primer sequences (5' -> 3')
 // Can be either a single string or a list of strings.
@@ -151,7 +151,7 @@ forward_p = 'AGRGTTYGATYMTGGCTCAG'
 reverse_p = 'AAGTCGTAACAAGGTARCY'
 
 // Error model learning
-error_model_reads_per_sample = 20 // 
+error_model_reads_per_sample = 1000 
 learn_nbases = null
 error_model = null // If provided, this error model is used.
 binned_quality_scores = '3,10,17,22,27,35,40'
@@ -166,13 +166,14 @@ chimera_method = 'consensus'
 min_parent_fold = 1.0
 
 // ASV filtering
-min_asv_total_freq = 10
+min_asv_total_freq = 0
 min_asv_sample = 0
+min_asv_prevalence = 0
 
 // Databases
 db_base_dir = ""
 databases_yaml = "${projectDir}/conf/databases.yml"
-db_to_prioritize = 'GG2'
+db_to_prioritize = 'gg2'
 
 download_db = false
 download_targets = null
@@ -364,7 +365,7 @@ final/
 └── vsearch_taxonomy_deepest_rank_summary.tsv
 ```
 
-* `frequency.tsv` — final ASV abundance table.
+* `frequency.tsv` — Summary statistics per sample with reads after filtering and ASVs after filtering
 * `dada2_tracking.tsv` — read counts retained through the different DADA2 processing steps.
 * `rarefaction_depth_suggested.txt` — suggested rarefaction depth based on the final abundance data.
 * `*_tax_merged_freq_tax.tsv` — final ASV table combining ASV identifiers, sequences, taxonomic assignments, assignment confidence, and per-sample abundances.
