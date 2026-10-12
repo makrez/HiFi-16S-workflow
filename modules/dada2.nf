@@ -56,7 +56,7 @@ process concatenate_error_model_reads {
     container "makrezdocker/alpine-jq:1.0"
     conda (params.enable_conda ? "$projectDir/env/jq.yml" : null)
 
-    label 'lowcpu'
+    label 'cpu_def'
 
     publishDir "${params.outdir}/dada2/error_model",
         pattern: 'error_model_sample.fastq.gz',

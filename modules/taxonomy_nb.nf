@@ -1,5 +1,5 @@
 process taxonomy_nb_assign {
-    label 'extremehighcpu'
+    label 'highcpu'
 
     conda (params.enable_conda ? "$projectDir/env/dada2.yml" : null)
     container "quay.io/biocontainers/bioconductor-dada2:1.38.0--r45ha27e39d_0"
