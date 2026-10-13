@@ -200,7 +200,7 @@ sample_stats_df <- data.frame(
   reads_after_asv_filtering = reads_after,
   number_of_asvs_before_filtering = asvs_before,
   number_of_asvs_after_filtering = asvs_after,
-  condition = "sample",
+  row_type = "sample",
   stringsAsFactors = FALSE
 )
 
@@ -211,7 +211,7 @@ overall_stats_df <- data.frame(
   reads_after_asv_filtering = sum(seqtab_filt_all_samples),
   number_of_asvs_before_filtering = ncol(seqtab),
   number_of_asvs_after_filtering = ncol(seqtab_filt_all_samples),
-  condition = "overall",
+  row_type = "overall",
   stringsAsFactors = FALSE
 )
 

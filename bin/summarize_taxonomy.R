@@ -4,6 +4,14 @@ suppressPackageStartupMessages({
     library(data.table)
 })
 
+# Shared canonical taxonomy normalisation (d__, p__, ...).
+get_script_dir <- function() {
+  arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
+  if (!length(arg)) stop("Cannot determine script location")
+  dirname(normalizePath(sub("^--file=", "", arg[[1]])))
+}
+source(file.path(get_script_dir(), "lib", "taxonomy_harmonisation.R"))
+
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) != 3) {
@@ -26,12 +34,12 @@ deepest_out <- args[3]
 #
 # Canonical taxonomy format expected by this script:
 #
-#   d:Bacteria;p:Bacillota;c:Bacilli;...;s:species
+#   d__Bacteria;p__Bacillota;c__Bacilli;...;s__species
 #
 # Ranks may stop at any level, for example:
 #
-#   d:Cryptista;p:Cryptophyta;c:Cryptophyceae;
-#   o:Cryptomonadales;f:Cryptomonadaceae;g:Cryptomonas
+#   d__Cryptista;p__Cryptophyta;c__Cryptophyceae;
+#   o__Cryptomonadales;f__Cryptomonadaceae;g__Cryptomonas
 #
 # Missing or empty taxonomy represents an unassigned ASV.
 # -------------------------------------------------------------------------
@@ -178,67 +186,7 @@ dat[
 # -------------------------------------------------------------------------
 
 validate_taxonomy <- function(taxon) {
-
-    if (
-        is.na(taxon) ||
-        trimws(taxon) == "" ||
-        trimws(taxon) == "Unassigned"
-    ) {
-        return(TRUE)
-    }
-
-    taxon <- trimws(taxon)
-
-    parts <- strsplit(
-        taxon,
-        ";",
-        fixed = TRUE
-    )[[1]]
-
-    parts <- trimws(parts)
-
-    parts <- parts[
-        parts != ""
-    ]
-
-    if (length(parts) == 0) {
-        return(TRUE)
-    }
-
-    # Every component must have one canonical rank prefix.
-    if (!all(
-        grepl(
-            "^[dpcofgs]:.+$",
-            parts
-        )
-    )) {
-        return(FALSE)
-    }
-
-    codes <- sub(
-        ":.*$",
-        "",
-        parts
-    )
-
-    # Rank must not occur more than once.
-    if (anyDuplicated(codes)) {
-        return(FALSE)
-    }
-
-    # Ranks must occur in taxonomic order.
-    positions <- unname(
-        rank_order[codes]
-    )
-
-    if (is.unsorted(
-        positions,
-        strictly = TRUE
-    )) {
-        return(FALSE)
-    }
-
-    TRUE
+    is_canonical_taxonomy(taxon)
 }
 
 valid_taxonomy <- vapply(
@@ -257,7 +205,7 @@ if (!all(valid_taxonomy)) {
         sprintf(
             paste(
                 "Non-canonical taxonomy detected.",
-                "Expected format d:...;p:...;c:...;o:...;f:...;g:...;s:...",
+                "Expected format d__...;p__...;c__...;o__...;f__...;g__...;s__...",
                 "Example offending value: %s"
             ),
             dat$Taxon[bad_idx]
@@ -290,7 +238,7 @@ extract_rank <- function(taxon, rank) {
     pattern <- paste0(
         "^",
         rank,
-        ":"
+        "__"
     )
 
     hit <- grep(
