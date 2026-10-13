@@ -115,7 +115,6 @@ nextflow run main.nf \
 
 ```
 
-
 You can execute the pipeline on a cluster by using either a custom nextflow profile, or 
 by adding a custom config. See `custom_slurm.config` for an example.
 
@@ -128,7 +127,51 @@ nextflow run main.nf \
   -c custom_slurm.config
 ```
 
+### Input files
 
+The workflow requires two tab-separated input files:
+
+1. a **sample sheet** specifying the input FASTQ file for each sample
+2. a **metadata file** describing the samples
+
+#### Sample sheet
+
+The sample sheet passed with `--input` must contain the columns `sample-id` and `filepath`.
+
+For example:
+
+```text
+sample-id	filepath
+sample01	data/sample01.fastq.gz
+sample02	data/sample02.fastq.gz
+sample03	/data/project/fastq/sample03.fastq.gz
+```
+
+Each row represents one sample:
+
+* `sample-id` — unique identifier for the sample
+* `filepath` — relative or absolute path to the corresponding PacBio HiFi FASTQ file
+
+Relative paths are resolved from the directory in which the workflow is launched. Input FASTQ files may be gzip-compressed (`.fastq.gz`).
+
+#### Metadata
+
+Sample metadata are provided separately using `--metadata`. The metadata file must contain at least the column `sample_name`.
+
+For example:
+
+```text
+sample_name	condition
+sample01	control
+sample02	control
+sample03	treatment
+```
+
+The `sample_name` column links the metadata to the sequencing data and must therefore exactly match the values in the `sample-id` column of the sample sheet.
+
+Additional metadata columns can be included as needed for downstream analysis. Each sample should occur only once in the metadata file.
+
+For the example above, the workflow can be started with:
 
 ## Configuration
 
