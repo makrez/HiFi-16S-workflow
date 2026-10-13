@@ -4,6 +4,7 @@ include {
     parseRequestedDbs
     validateDownloadParams
     validatePreprocessParams
+    validateTaxonomyParams
     buildRunLog
 } from './modules/validation'
 
@@ -136,6 +137,8 @@ workflow {
             DOWNLOAD_DATABASES(db_manifest, requested_dbs)
         }
         else {
+            validateTaxonomyParams(params, db_manifest)
+
             def n_sample = validatePreprocessParams(params)
 
             log.info buildRunLog(

@@ -54,6 +54,26 @@ def validatePreprocessParams(params) {
     return n_sample
 }
 
+def validateTaxonomyParams(params, db_manifest) {
+    def selected_dbs = params.nb_databases instanceof String
+        ? params.nb_databases.split(',')*.trim().findAll()
+        : params.nb_databases
+
+    def available_dbs = db_manifest.keySet()
+
+    def unknown_dbs = selected_dbs.findAll { !available_dbs.contains(it) }
+
+    if (unknown_dbs) {
+        error "Unknown databases: ${unknown_dbs.join(', ')}. " +
+              "Available databases: ${available_dbs.join(', ')}"
+    }
+
+    if (!selected_dbs.contains(params.db_to_prioritize)) {
+        error "Invalid db_to_prioritize: '${params.db_to_prioritize}'. " +
+              "Selected databases: ${selected_dbs.join(', ')}"
+    }
+}
+
 def buildRunLog(params, version, n_sample) {
     def trim_cutadapt = params.skip_primer_trim ? "No" : "Yes"
 
