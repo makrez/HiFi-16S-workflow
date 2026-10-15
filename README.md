@@ -16,6 +16,7 @@ The refactor focuses on:
 
 - Database management
 
+- Shiny App for data exploration and visualization
 
 # Pipeline Structure
 
@@ -426,6 +427,44 @@ The `pipeline_info/` directory contains Nextflow execution metadata:
 * `execution_trace.txt` — tabular execution trace containing task-level runtime and resource information.
 
 These files are primarily useful for troubleshooting, reproducibility, and evaluating pipeline performance.
+
+# HiFi Amplicon Results Explorer
+
+A Shiny application for exploring and visualising results produced by the
+[HiFi 16S workflow](example_pipeline/HiFi-16S-workflow). It helps assess
+sequencing/processing quality, inspect DADA2 and taxonomy results, explore ASV
+abundance and composition, and compare samples using user-supplied metadata.
+
+## Quick start (Docker)
+
+```sh
+docker build -t amplicon-app .
+docker run --rm -p 3838:3838 -v /path/to/results:/data/results:ro amplicon-app
+```
+
+Open <http://localhost:3838>, select `/data/results` on the **Home** tab and
+click **Load run**. Upload the sample metadata on the Home tab; roles and
+validation details are on the **Metadata** tab.
+
+## Copy only results the app needs
+
+A full results directory is mostly data the app never reads (FASTQs, RDS
+objects and per-read stats; the example 16S run is ~8.6 GB). To share or mount
+just what the app needs, export a small subset that keeps the same relative
+layout:
+
+```sh
+# shipped with the HiFi-16S-workflow as utils/export_app_results.sh
+# (a development copy lives in scripts/ of this repository)
+utils/export_app_results.sh /path/to/results /path/to/results_app
+```
+
+The script copies only the files the app reads, prints a summary (file count and
+source vs. export size) and writes `EXPORT_MANIFEST.txt` in the output. For the
+example 16S run this is ~338 MB instead of ~8.6 GB. Point the app (or a Docker
+mount) at the export as usual. Use `--dry-run` to preview, `--force` to write
+into an existing non-empty directory, and `--help` for details.
+
 
 # Reference databases
 
