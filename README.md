@@ -431,7 +431,7 @@ These files are primarily useful for troubleshooting, reproducibility, and evalu
 # HiFi Amplicon Results Explorer
 
 A Shiny application for exploring and visualising results produced by the
-[HiFi 16S workflow](example_pipeline/HiFi-16S-workflow). It helps assess
+HiFi 16S workflow. It helps assess
 sequencing/processing quality, inspect DADA2 and taxonomy results, explore ASV
 abundance and composition, and compare samples using user-supplied metadata.
 
@@ -455,7 +455,6 @@ layout:
 
 ```sh
 # shipped with the HiFi-16S-workflow as utils/export_app_results.sh
-# (a development copy lives in scripts/ of this repository)
 utils/export_app_results.sh /path/to/results /path/to/results_app
 ```
 
