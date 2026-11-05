@@ -447,7 +447,7 @@ The application is available as a prebuilt Docker image on [Docker Hub](https://
 ### 1. Pull the image
 
 ```bash
-docker pull makrezdocker/amplicon-downstream-app:0.1.0
+docker pull makrezdocker/amplicon-downstream-app:0.1.1
 ```
 
 ### 2. Start the application
@@ -464,7 +464,7 @@ Run the Docker container:
 docker run --rm \
   -p 3840:3838 \
   -v "$(pwd):/data/results:ro" \
-  makrezdocker/amplicon-downstream-app:0.1.0
+  makrezdocker/amplicon-downstream-app:0.1.1
 ```
 
 Alternatively, specify the absolute path directly:
@@ -473,7 +473,7 @@ Alternatively, specify the absolute path directly:
 docker run --rm \
   -p 3840:3838 \
   -v "/path/to/results:/data/results:ro" \
-  makrezdocker/amplicon-downstream-app:0.1.0
+  makrezdocker/amplicon-downstream-app:0.1.1
 ```
 
 **Docker options:**
@@ -532,7 +532,7 @@ The exported directory can be mounted into the Docker container in exactly the s
 docker run --rm \
   -p 3840:3838 \
   -v "/path/to/results_app:/data/results:ro" \
-  makrezdocker/amplicon-downstream-app:0.1.0
+  makrezdocker/amplicon-downstream-app:0.1.1
 ```
 
 The application will use the exported files without requiring the complete workflow output.
